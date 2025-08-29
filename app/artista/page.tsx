@@ -81,7 +81,7 @@ export default function ArtistaPage() {
         <div className="grid gap-10 lg:grid-cols-12">
           {/* BIO */}
           <article className="lg:col-span-5">
-            <h2 className="h2">Acerca del artista</h2>
+            <h2 className="h2">Acerca del artista!</h2>
             <p className="mt-4 text-[color:var(--muted)] leading-relaxed">
               Nacido en Ciudad X (1990), su práctica se centra en la observación minuciosa
               de formas simples, traducidas en composiciones con capas sutiles y un uso
