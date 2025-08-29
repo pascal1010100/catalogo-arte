@@ -1,0 +1,18 @@
+/* ==== Hero utilities ==== */
+.hero-gradient {
+  background: linear-gradient(180deg, var(--mint) 0%, color-mix(in oklab, var(--sky) 80%, white) 100%);
+}
+
+/* glow para titular blanco sobre color */
+.text-hero-glow {
+  text-shadow:
+    0 6px 24px rgba(0,0,0,.35),
+    0 2px 10px rgba(0,0,0,.25);
+}
+
+/* cuando el navbar está encima del hero */
+.nav--over-hero {
+  background: transparent !important;
+  border-color: transparent !important;
+  backdrop-filter: blur(0px) !important;
+}
