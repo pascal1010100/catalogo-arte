@@ -1,18 +1,17 @@
 "use client";
 
+import { Suspense, useMemo } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { GalleryVerticalEnd, SlidersHorizontal } from "lucide-react";
 import ArtworkCard from "@/components/ui/ArtworkCard";
 import ArtworkModal, { type ModalArtwork } from "@/components/galeria/ArtworkModal";
 import { useCart } from "@/stores/cart";
 
-import { useMemo } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-
 /* ========= Tipos y datos ========= */
 type Obra = {
   id: string;
   title: string;
-  meta?: string;       // ej: "Óleo — 2024"
+  meta?: string;
   imageSrc: string;
   chip?: string;
   href?: string;
@@ -34,13 +33,12 @@ const ACTIVO = "Todas";
 /* ========= Helpers ========= */
 function toModalArtwork(o?: Obra | null): ModalArtwork | null {
   if (!o) return null;
-  // meta: "Medio — Año"
   const [mediumRaw, yearRaw] = (o.meta ?? "").split("—").map(s => s?.trim());
   const yearParsed = yearRaw ? Number(yearRaw) || yearRaw : undefined;
   return {
     id: o.id,
     title: o.title,
-    images: [o.imageSrc],     // si luego tienes varias, pásalas aquí
+    images: [o.imageSrc],
     medium: mediumRaw,
     year: yearParsed,
     price: o.price,
@@ -102,33 +100,36 @@ function Toolbar() {
   );
 }
 
-/* ========= Página ========= */
+/* ========= Página (shell) ========= */
+// En Next 15, si usas useSearchParams, debe estar dentro de <Suspense>
 export default function GaleriaPage() {
+  return (
+    <Suspense fallback={<div className="container-padded py-12">Cargando…</div>}>
+      <GaleriaInner />
+    </Suspense>
+  );
+}
+
+/* ========= Página (contenido real) ========= */
+function GaleriaInner() {
   const add = useCart((s) => s.add);
 
-  // Router y query
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // 1) Leemos el slug desde la URL: /galeria?obra=obra-3
   const slug = searchParams.get("obra");
 
-  // 2) Buscamos la obra correspondiente
   const selected = useMemo(
     () => OBRAS.find((o) => o.id === slug) ?? null,
     [slug]
   );
 
-  // 3) Convertimos al formato del modal
   const modalArtwork = useMemo(() => toModalArtwork(selected), [selected]);
-
-  // 4) El modal está "open" si hay slug en la URL
   const open = Boolean(slug);
 
-  // 5) onOpenChange: al cerrar -> quitamos ?obra de la URL (sin recargar)
   const setOpen = (next: boolean) => {
-    if (next) return; // abrir se hace navegando a ?obra=...
+    if (next) return; // abrir se hace con Link (?obra=...)
     const params = new URLSearchParams(searchParams);
     params.delete("obra");
     const qs = params.toString();
@@ -150,10 +151,8 @@ export default function GaleriaPage() {
                   meta={obra.meta}
                   imageSrc={obra.imageSrc}
                   chip={obra.chip}
-                  // 6) Deep-link: al hacer click en la imagen abre el modal de esa obra
                   href={`?obra=${obra.id}`}
                   className="card-surface card-hover"
-                  /* carrito */
                   priceUsd={obra.price}
                   addLabel="Agregar"
                   onAdd={() =>
@@ -178,7 +177,6 @@ export default function GaleriaPage() {
         </div>
       </div>
 
-      {/* Modal conectado a la URL */}
       <ArtworkModal
         open={open}
         onOpenChange={setOpen}
