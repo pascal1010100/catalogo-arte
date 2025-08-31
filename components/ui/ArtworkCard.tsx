@@ -1,20 +1,20 @@
+"use client";
+
 import Image from "next/image";
+import Link from "next/link";
 import clsx from "clsx";
 
 type ArtworkCardProps = {
   title: string;
   meta?: string;
   imageSrc: string;
-  href?: string;
+  href?: string; // deep-link al modal (ej. ?obra=obra-1)
   chip?: string;
   className?: string;
   // carrito (opcionales)
   priceUsd?: number;
   addLabel?: string;
   onAdd?: () => void;
-  // modal (opcionales)
-  viewLabel?: string;
-  onView?: () => void;
 };
 
 export default function ArtworkCard({
@@ -27,8 +27,6 @@ export default function ArtworkCard({
   priceUsd,
   addLabel = "Agregar",
   onAdd,
-  viewLabel = "Ver más",
-  onView,
 }: ArtworkCardProps) {
   return (
     <div
@@ -38,8 +36,10 @@ export default function ArtworkCard({
         className
       )}
     >
-      <a
+      {/* Imagen principal con Link al modal */}
+      <Link
         href={href}
+        scroll={false}
         className="block focus:outline-none focus:ring-2 focus:ring-black/10"
       >
         <div className="relative aspect-[4/3]">
@@ -56,15 +56,17 @@ export default function ArtworkCard({
             </span>
           )}
         </div>
-      </a>
+      </Link>
 
+      {/* Footer de la tarjeta */}
       <div className="p-4 flex items-center justify-between gap-3">
         <div>
           <p className="font-semibold">{title}</p>
           {meta && <p className="mt-0.5 text-sm opacity-70">{meta}</p>}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          {/* Botón agregar al carrito */}
           {onAdd && (
             <button
               type="button"
@@ -76,16 +78,15 @@ export default function ArtworkCard({
             </button>
           )}
 
-          {onView && (
-            <button
-              type="button"
-              onClick={onView}
-              className="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold border border-black/10 hover:bg-black/[0.04] transition"
-              aria-label={`Ver más sobre ${title}`}
-            >
-              {viewLabel}
-            </button>
-          )}
+          {/* Botón Ver más → abre modal */}
+          <Link
+            href={href}
+            scroll={false}
+            className="shrink-0 rounded-full px-3 py-1.5 text-xs font-medium border border-black/10 hover:border-black/20 transition"
+            aria-label={`Ver más sobre ${title}`}
+          >
+            Ver más
+          </Link>
         </div>
       </div>
     </div>

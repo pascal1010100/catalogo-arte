@@ -1,16 +1,18 @@
 "use client";
 
-import { useState } from "react";
 import { GalleryVerticalEnd, SlidersHorizontal } from "lucide-react";
 import ArtworkCard from "@/components/ui/ArtworkCard";
 import ArtworkModal, { type ModalArtwork } from "@/components/galeria/ArtworkModal";
 import { useCart } from "@/stores/cart";
 
+import { useMemo } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+
 /* ========= Tipos y datos ========= */
 type Obra = {
   id: string;
   title: string;
-  meta?: string;        // Ej: "Óleo — 2024"
+  meta?: string;       // ej: "Óleo — 2024"
   imageSrc: string;
   chip?: string;
   href?: string;
@@ -21,39 +23,28 @@ const OBRAS: Obra[] = [
   { id: "obra-1", title: "Luz en Silencio",   meta: "Óleo — 2024",    imageSrc: "/images/obra-1.jpg", chip: "Nueva",   price: 450 },
   { id: "obra-2", title: "Memoria de Agua",   meta: "Acrílico — 2023", imageSrc: "/images/obra-2.jpg",                 price: 380 },
   { id: "obra-3", title: "Campos Invisibles", meta: "Mixta — 2022",   imageSrc: "/images/obra-3.jpg", chip: "Serie X", price: 520 },
-  { id: "obra-4", title: "Solsticio",         meta: "Óleo — 2024",    imageSrc: "/images/obra-4.jpg",                  price: 410 },
-  { id: "obra-5", title: "Retícula",          meta: "Tinta — 2023",   imageSrc: "/images/obra-5.jpg",                  price: 260 },
-  { id: "obra-6", title: "Umbral",            meta: "Mixta — 2022",   imageSrc: "/images/obra-6.jpg",                  price: 300 },
+  { id: "obra-4", title: "Solsticio",         meta: "Óleo — 2024",    imageSrc: "/images/obra-4.jpg",                 price: 410 },
+  { id: "obra-5", title: "Retícula",          meta: "Tinta — 2023",   imageSrc: "/images/obra-5.jpg",                 price: 260 },
+  { id: "obra-6", title: "Umbral",            meta: "Mixta — 2022",   imageSrc: "/images/obra-6.jpg",                 price: 300 },
 ];
 
 const FILTROS = ["Todas", "Óleo", "Acrílico", "Mixta", "Tinta"];
 const ACTIVO = "Todas";
 
 /* ========= Helpers ========= */
-function parseMeta(meta?: string) {
-  // "Óleo — 2024" -> { medium: "Óleo", year: "2024" }
-  if (!meta) return { medium: undefined as string | undefined, year: undefined as string | number | undefined };
-  const parts = meta.split("—").map((s) => s.trim());
-  const medium = parts[0] || undefined;
-  const year = parts[1] || undefined;
-  return { medium, year };
-}
-
-function toModalArtwork(obra: Obra): ModalArtwork {
-  const { medium, year } = parseMeta(obra.meta);
+function toModalArtwork(o?: Obra | null): ModalArtwork | null {
+  if (!o) return null;
+  // meta: "Medio — Año"
+  const [mediumRaw, yearRaw] = (o.meta ?? "").split("—").map(s => s?.trim());
+  const yearParsed = yearRaw ? Number(yearRaw) || yearRaw : undefined;
   return {
-    id: obra.id,
-    slug: obra.id,
-    title: obra.title,
-    year,
-    medium,
-    size: undefined,
-    price: obra.price,
+    id: o.id,
+    title: o.title,
+    images: [o.imageSrc],     // si luego tienes varias, pásalas aquí
+    medium: mediumRaw,
+    year: yearParsed,
+    price: o.price,
     availability: "available",
-    images: [obra.imageSrc],
-    description: undefined,
-    series: undefined,
-    tags: undefined,
   };
 }
 
@@ -65,7 +56,9 @@ function SectionHeader() {
         <GalleryVerticalEnd className="size-4" />
         Galería de obras
       </span>
-      <h1 className="mt-3 text-4xl md:text-5xl font-semibold leading-tight">Explora la colección</h1>
+      <h1 className="mt-3 text-4xl md:text-5xl font-semibold leading-tight">
+        Explora la colección
+      </h1>
       <p className="mt-3 text-sm opacity-70 max-w-2xl">
         Selección curada de piezas recientes y series anteriores. Diseño claro,
         legible y coherente con el resto de la app.
@@ -86,7 +79,9 @@ function Toolbar() {
                 type="button"
                 className={[
                   "rounded-full px-3 py-1.5 text-xs transition",
-                  active ? "border border-black/15 bg-black/[0.04]" : "border border-black/10 hover:border-black/15",
+                  active
+                    ? "border border-black/15 bg-black/[0.04]"
+                    : "border border-black/10 hover:border-black/15"
                 ].join(" ")}
               >
                 {f}
@@ -111,26 +106,34 @@ function Toolbar() {
 export default function GaleriaPage() {
   const add = useCart((s) => s.add);
 
-  // Estado del modal
-  const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState<ModalArtwork | null>(null);
+  // Router y query
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  function handleOpen(obra: Obra) {
-    setSelected(toModalArtwork(obra));
-    setOpen(true);
-  }
+  // 1) Leemos el slug desde la URL: /galeria?obra=obra-3
+  const slug = searchParams.get("obra");
 
-  function onAddToCart(art: ModalArtwork) {
-    add(
-      {
-        id: art.id,
-        name: art.title,
-        price: art.price ?? 0,
-        imageUrl: art.images?.[0] ?? "",
-      },
-      1
-    );
-  }
+  // 2) Buscamos la obra correspondiente
+  const selected = useMemo(
+    () => OBRAS.find((o) => o.id === slug) ?? null,
+    [slug]
+  );
+
+  // 3) Convertimos al formato del modal
+  const modalArtwork = useMemo(() => toModalArtwork(selected), [selected]);
+
+  // 4) El modal está "open" si hay slug en la URL
+  const open = Boolean(slug);
+
+  // 5) onOpenChange: al cerrar -> quitamos ?obra de la URL (sin recargar)
+  const setOpen = (next: boolean) => {
+    if (next) return; // abrir se hace navegando a ?obra=...
+    const params = new URLSearchParams(searchParams);
+    params.delete("obra");
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
 
   return (
     <main className="relative min-h-[70vh]">
@@ -147,20 +150,23 @@ export default function GaleriaPage() {
                   meta={obra.meta}
                   imageSrc={obra.imageSrc}
                   chip={obra.chip}
-                  href={obra.href ?? "#"}
+                  // 6) Deep-link: al hacer click en la imagen abre el modal de esa obra
+                  href={`?obra=${obra.id}`}
                   className="card-surface card-hover"
-                  /* carrito directo desde la card (como ya lo tenías) */
+                  /* carrito */
                   priceUsd={obra.price}
                   addLabel="Agregar"
                   onAdd={() =>
                     add(
-                      { id: obra.id, name: obra.title, price: obra.price, imageUrl: obra.imageSrc },
+                      {
+                        id: obra.id,
+                        name: obra.title,
+                        price: obra.price,
+                        imageUrl: obra.imageSrc,
+                      },
                       1
                     )
                   }
-                  /* botón para abrir modal */
-                  viewLabel="Ver más"
-                  onView={() => handleOpen(obra)}
                 />
               </li>
             ))}
@@ -172,14 +178,12 @@ export default function GaleriaPage() {
         </div>
       </div>
 
-      {/* Modal conectado */}
+      {/* Modal conectado a la URL */}
       <ArtworkModal
         open={open}
         onOpenChange={setOpen}
-        artwork={selected ?? undefined}
-        onAddToCart={onAddToCart}
+        artwork={modalArtwork ?? undefined}
         currency="GTQ"
-        // whatsappPhoneE164="5025XXXXXXX"
       />
     </main>
   );

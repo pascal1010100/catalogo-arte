@@ -26,7 +26,7 @@ const DialogOverlay = React.forwardRef<
 ))
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
-/** CONTENEDOR ESTABLE (centrado, 90vh, sin scroll propio) */
+/** Contenedor centrado, altura máx 90vh; el scroll lo maneja el contenido interno */
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
@@ -38,11 +38,11 @@ const DialogContent = React.forwardRef<
       className={cn(
         // centrado
         "fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50",
-        // medidas: ancho fluido y altura máxima
+        // medidas
         "w-[92vw] max-w-[1040px] max-h-[90vh]",
-        // estética del proyecto
+        // estética
         "rounded-3xl border border-black/12 bg-[var(--bg)] shadow-[var(--shadow-soft)]",
-        // el contenido interior se encarga del scroll; aquí NO
+        // sin scroll aquí (lo maneja el cuerpo del modal)
         "overflow-hidden focus:outline-none",
         className
       )}
@@ -50,10 +50,10 @@ const DialogContent = React.forwardRef<
     >
       {children}
 
-      {/* única “X” */}
+      {/* ÚNICA ‘X’ para cerrar */}
       <DialogPrimitive.Close asChild>
         <button
-          className="absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.04] text-[color:var(--fg)]/80 transition hover:bg-black/[0.06] hover:text-[color:var(--fg)] focus:outline-none focus:ring-2 focus:ring-black/20"
+          className="absolute right-4 top-4 z-20 pointer-events-auto inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.04] text-[color:var(--fg)]/80 transition hover:bg-black/[0.06] hover:text-[color:var(--fg)] focus:outline-none focus:ring-2 focus:ring-black/20"
           aria-label="Cerrar"
         >
           <X className="h-4 w-4" />
