@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Phone, Info, Check } from "lucide-react";
 
@@ -73,7 +72,9 @@ export default function ArtworkModal({
   const canAdd = !!artwork && artwork.availability !== "sold" && artwork.availability !== "reserved";
 
   const handleAdd = () => {
-    if (artwork && onAddToCart) onAddToCart(artwork);
+    if (!artwork) return;
+    if (onAddToCart) onAddToCart(artwork);
+    onOpenChange(false); // cerrar modal tras agregar
   };
 
   const waMessage = artwork
@@ -124,6 +125,7 @@ export default function ArtworkModal({
       <Separator className="my-6" />
       <div className="flex flex-col sm:flex-row gap-2">
         <Button
+          type="button"
           className="flex-1 h-11 rounded-xl btn-accent"
           onClick={handleAdd}
           disabled={!canAdd}
@@ -221,7 +223,7 @@ export default function ArtworkModal({
               ) : null}
             </div>
 
-            {/* DETALLES (en desktop, siéntete libre de mantener scroll general) */}
+            {/* DETALLES */}
             <div className="bg-[var(--bg)]">
               <Details />
             </div>

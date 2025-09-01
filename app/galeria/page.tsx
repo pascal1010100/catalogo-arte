@@ -157,7 +157,6 @@ function Toolbar({ medio, orden, pathname, searchParams }: ToolbarProps) {
 }
 
 /* ========= Página (shell) ========= */
-// Next 15: hooks de navegación dentro de <Suspense>
 export default function GaleriaPage() {
   return (
     <Suspense fallback={<div className="container-padded py-12">Cargando…</div>}>
@@ -282,6 +281,17 @@ function GaleriaInner() {
         onOpenChange={setOpen}
         artwork={modalArtwork ?? undefined}
         currency="GTQ"
+        onAddToCart={(art) => {
+          add(
+            {
+              id: art.id,
+              name: art.title,
+              price: Number(art.price ?? 0),
+              imageUrl: art.images?.[0] ?? "/images/placeholder.jpg",
+            },
+            1
+          );
+        }}
       />
     </main>
   );
