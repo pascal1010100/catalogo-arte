@@ -16,7 +16,7 @@ export default function Footer() {
       role="contentinfo"
       className="relative border-t border-black/10 bg-[color:var(--bg)] text-[color:var(--fg)]"
     >
-      {/* halo superior que conecta visualmente con el hero */}
+      {/* Halo superior que conecta visualmente con el contenido */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 -top-8 h-8 bg-gradient-to-b from-black/10 to-transparent"
@@ -32,7 +32,7 @@ export default function Footer() {
               aria-label="Inicio"
               className="inline-flex items-center gap-3 select-none"
             >
-              {/* Avatar del artista (existe /public/artista/avatar.jpg) */}
+              {/* Avatar del artista (requiere /public/artista/avatar.jpg) */}
               <span className="relative h-9 w-9 overflow-hidden rounded-full ring-1 ring-black/10">
                 <Image
                   src="/artista/avatar.jpg"
@@ -40,7 +40,6 @@ export default function Footer() {
                   fill
                   sizes="36px"
                   className="object-cover"
-                  priority={false}
                 />
               </span>
 
@@ -114,16 +113,16 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               <li>
                 <a
-                  href="https://instagram.com/tu_usuario"
+                  href="https://www.instagram.com/zptvrd?igsh=ZHgzazcwa2E4cXV2"
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   className="group inline-flex items-center gap-2 rounded-xl px-2 py-1 transition hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--fg)]/30"
                 >
                   <Instagram
                     className="h-4 w-4 opacity-90 group-hover:opacity-100"
                     aria-hidden
                   />
-                  <span>@tu_usuario</span>
+                  <span>@zptvrd</span>
                 </a>
               </li>
               <li>
@@ -172,7 +171,11 @@ export default function Footer() {
           </p>
 
           <div className="flex items-center gap-4 text-xs opacity-70">
-            <a href="#" className="inline-flex items-center gap-1 hover:opacity-100 hover:underline">
+            {/* Ancla para volver arriba (sin onClick) */}
+            <a
+              href="#top"
+              className="inline-flex items-center gap-1 hover:opacity-100 hover:underline"
+            >
               Subir
               <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
             </a>
