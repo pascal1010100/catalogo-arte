@@ -1,56 +1,86 @@
 // app/contacto/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { Instagram, Mail, MapPin, Send } from "lucide-react";
 
 type Status = "idle" | "loading" | "ok" | "error";
 
+interface ContactPayload {
+  name: string;
+  email: string;
+  message: string;
+}
+
+interface ApiResponse {
+  ok?: boolean;
+  error?: string;
+}
+
 export default function ContactoPage() {
   const [status, setStatus] = useState<Status>("idle");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setStatus("loading");
+    setErrorMsg(null);
 
     const form = e.currentTarget;
-    const data = {
-      name: (form.elements.namedItem("name") as HTMLInputElement).value.trim(),
-      email: (form.elements.namedItem("email") as HTMLInputElement).value.trim(),
-      message: (form.elements.namedItem("message") as HTMLTextAreaElement).value.trim(),
+
+    const nameEl = form.elements.namedItem("name") as HTMLInputElement | null;
+    const emailEl = form.elements.namedItem("email") as HTMLInputElement | null;
+    const messageEl = form.elements.namedItem("message") as HTMLTextAreaElement | null;
+
+    const data: ContactPayload = {
+      name: (nameEl?.value ?? "").trim(),
+      email: (emailEl?.value ?? "").trim(),
+      message: (messageEl?.value ?? "").trim(),
     };
 
     try {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(data satisfies ContactPayload),
       });
-      setStatus(res.ok ? "ok" : "error");
-      if (res.ok) form.reset();
+
+      let body: ApiResponse = {};
+      try {
+        body = (await res.json()) as ApiResponse;
+      } catch {
+        // puede no venir cuerpo en algunos errores
+      }
+
+      if (!res.ok || body.ok === false) {
+        setStatus("error");
+        setErrorMsg(body.error ?? "No se pudo enviar.");
+        return;
+      }
+
+      setStatus("ok");
+      form.reset();
     } catch {
       setStatus("error");
+      setErrorMsg("No se pudo conectar con el servidor.");
     }
   }
 
-  const disabled = status === "loading";
+  const disabled: boolean = status === "loading";
 
   return (
     <main>
-      {/* HERO con imagen de fondo */}
+      {/* HERO con imagen de fondo (tu versión que mejor rinde en móvil) */}
       <section
         className="relative overflow-hidden"
         style={{
           paddingTop: "calc(56px + env(safe-area-inset-top))",
-          // ✅ tu archivo en /public/contacto/bg-herocontacto.jpg
           backgroundImage:
             "linear-gradient(0deg, rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('/contacto/bg-herocontacto.jpg')",
           backgroundSize: "cover",
-          // baja un poco el encuadre para que el coche quede visible
           backgroundPosition: "center 65%",
           backgroundRepeat: "no-repeat",
-          // más alto para que entre bien el motivo
           minHeight: "60svh",
         }}
       >
@@ -90,11 +120,11 @@ export default function ContactoPage() {
               <div>
                 <p className="font-semibold">Instagram</p>
                 <Link
-                  href="https://instagram.com/"
+                  href="https://www.instagram.com/zptvrd?igsh=ZHgzazcwa2E4cXV2"
                   target="_blank"
                   className="underline underline-offset-4"
                 >
-                  instagram.com/…
+                  @zptvrd
                 </Link>
                 <p className="text-sm opacity-70 mt-1">Proceso, bocetos y obras recientes.</p>
               </div>
@@ -182,7 +212,9 @@ export default function ContactoPage() {
                       <span className="text-sm text-green-700">¡Mensaje enviado! Gracias 🙌</span>
                     )}
                     {status === "error" && (
-                      <span className="text-sm text-red-700">Hubo un error. Intenta de nuevo.</span>
+                      <span className="text-sm text-red-700">
+                        {errorMsg ?? "Hubo un error. Intenta de nuevo."}
+                      </span>
                     )}
                   </div>
 
