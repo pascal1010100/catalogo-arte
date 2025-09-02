@@ -5,25 +5,22 @@ import { Resend } from "resend";
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+type Payload = { name?: string; email?: string; message?: string };
 
-function isEmail(v: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-}
-function escapeHtml(s: string) {
-  return s
+const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+const escapeHtml = (s: string) =>
+  s
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
-}
 
 export async function POST(req: Request) {
   try {
-    const { name = "", email = "", message = "" } = await req.json();
+    const { name = "", email = "", message = "" } = (await req.json()) as Payload;
 
-    // ✅ Validación más permisiva
+    // Validación simple
     if (name.trim().length < 2 || name.trim().length > 80) {
       return NextResponse.json({ error: "El nombre debe tener al menos 2 caracteres." }, { status: 400 });
     }
@@ -34,8 +31,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "El mensaje es demasiado corto." }, { status: 400 });
     }
 
+    // ⚠️ No crear Resend a nivel de módulo. Valida env y crea aquí.
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "Server no configurado: falta RESEND_API_KEY." },
+        { status: 500 }
+      );
+    }
+    const resend = new Resend(apiKey);
+
     const from = process.env.MAIL_FROM || "ZPTVRD <onboarding@resend.dev>";
-    const to = process.env.MAIL_TO || process.env.TEST_TO || "tu_correo@ejemplo.com"; // <-- pon tu correo en .env
+    const to = process.env.MAIL_TO || email;
 
     const subject = `Nuevo mensaje — ${name}`;
     const html = `
@@ -44,9 +51,8 @@ export async function POST(req: Request) {
         <p><strong>Nombre:</strong> ${escapeHtml(name)}</p>
         <p><strong>Email:</strong> ${escapeHtml(email)}</p>
         <p style="margin:12px 0 6px"><strong>Mensaje:</strong></p>
-        <pre style="white-space:pre-wrap;background:#f6f6f6;padding:12px;border-radius:8px">${escapeHtml(
-          message
-        )}</pre>
+        <pre style="white-space:pre-wrap;background:#f6f6f6;padding:12px;border-radius:8px">
+${escapeHtml(message)}</pre>
       </div>
     `;
 
@@ -64,7 +70,8 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ ok: true });
-  } catch (e) {
+  } catch (err) {
+    console.error("[/api/contact] error:", err);
     return NextResponse.json({ error: "Error inesperado." }, { status: 500 });
   }
 }
