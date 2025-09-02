@@ -1,3 +1,4 @@
+// components/ui/Navbar.tsx
 "use client";
 
 import Link from "next/link";
@@ -6,10 +7,15 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, X, ShoppingCart } from "lucide-react";
 import { useCart } from "@/stores/cart";
+import {
+  motion,
+  useAnimation,
+  useReducedMotion,
+  AnimatePresence,
+} from "framer-motion";
 
 type NavLink = { href: string; label: string };
 
-// 👉 ajusta a donde tengas tu logo en /public
 const LOGO_SRC = "/brand/zptvrd.svg";
 
 const LINKS: NavLink[] = [
@@ -25,9 +31,16 @@ export default function Navbar() {
   const [logoOk, setLogoOk] = useState(true);
 
   // contador de piezas en el carrito
-  const itemCount = useCart((s) => s.items.reduce((acc, it) => acc + (it.quantity ?? 1), 0));
+  const itemCount = useCart((s) =>
+    s.items.reduce((acc, it) => acc + (it.quantity ?? 1), 0)
+  );
+  const displayCount = itemCount > 99 ? "99+" : itemCount;
 
-  // efecto de scroll (blur/sombra)
+  // --- Animaciones ---
+  const badgeControls = useAnimation();
+  const iconControls = useAnimation();
+  const prefersReduced = useReducedMotion();
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
     onScroll();
@@ -35,8 +48,61 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // cerrar menú al cambiar de ruta
   useEffect(() => setOpen(false), [pathname]);
+
+  useEffect(() => {
+    if (itemCount <= 0) return;
+
+    if (prefersReduced) {
+      badgeControls.set({ scale: 1, y: 0, rotate: 0, filter: "brightness(1)" });
+      iconControls.set({ rotate: 0, scale: 1 });
+      return;
+    }
+
+    // Secuencia vistosa (Framer v11 friendly):
+    // 1) Salto + bump (spring)
+    // 2) Wiggle rápido (tween)
+    // 3) Vuelve a lugar (spring)
+    // 4) Flash de brillo sutil (tween)
+    (async () => {
+      await badgeControls.start({
+        scale: 1.25,
+        y: -6,
+        transition: { type: "spring", stiffness: 900, damping: 16 },
+      });
+      await badgeControls.start({
+        rotate: -10,
+        transition: { duration: 0.08, ease: "easeOut" },
+      });
+      await badgeControls.start({
+        rotate: 10,
+        transition: { duration: 0.12, ease: "easeOut" },
+      });
+      await badgeControls.start({
+        rotate: 0,
+        y: 0,
+        transition: { type: "spring", stiffness: 900, damping: 18 },
+      });
+      await badgeControls.start({
+        scale: 1,
+        transition: { type: "spring", stiffness: 750, damping: 20 },
+      });
+      await badgeControls.start({
+        filter: "brightness(1.35)",
+        transition: { duration: 0.12, ease: "easeOut" },
+      });
+      await badgeControls.start({
+        filter: "brightness(1)",
+        transition: { duration: 0.18, ease: "easeOut" },
+      });
+    })();
+
+    // Mini “shake” del icono (tween con varios keyframes)
+    iconControls.start({
+      rotate: [0, -15, 12, -8, 0],
+      transition: { duration: 0.5, ease: "easeOut" },
+    });
+  }, [itemCount, badgeControls, iconControls, prefersReduced]);
 
   return (
     <header
@@ -48,9 +114,16 @@ export default function Navbar() {
         "bg-[color:var(--bg)]/92 border-black/10",
       ].join(" ")}
     >
-      <nav className="container-padded flex h-14 items-center justify-between gap-3" aria-label="Principal">
-        {/* === Left: Branding (icono + fallback texto) === */}
-        <Link href="/" className="flex items-center gap-2 select-none shrink-0" aria-label="Inicio">
+      <nav
+        className="container-padded flex h-14 items-center justify-between gap-3"
+        aria-label="Principal"
+      >
+        {/* Branding */}
+        <Link
+          href="/"
+          className="flex items-center gap-2 select-none shrink-0"
+          aria-label="Inicio"
+        >
           {logoOk ? (
             <Image
               src={LOGO_SRC}
@@ -68,7 +141,7 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* === Center: links (solo desktop) === */}
+        {/* Links desktop */}
         <div className="hidden md:flex items-center justify-center gap-6">
           {LINKS.map((l) => {
             const active = pathname === l.href;
@@ -90,25 +163,49 @@ export default function Navbar() {
           })}
         </div>
 
-        {/* === Right: carrito (SIEMPRE visible) + botón menú móvil === */}
+        {/* Carrito + hamburguesa */}
         <div className="flex items-center gap-1 sm:gap-2">
           <Link
             href="/carrito"
             aria-label={`Carrito${itemCount ? `: ${itemCount} artículo(s)` : ""}`}
             className="relative inline-flex items-center justify-center rounded-full p-2 hover:bg-black/5 transition"
           >
-            <ShoppingCart className="h-5 w-5 text-[color:var(--fg)]" />
+            <motion.span
+              className="inline-flex"
+              initial={false}
+              animate={iconControls}
+            >
+              <ShoppingCart className="h-5 w-5 text-[color:var(--fg)]" />
+            </motion.span>
+
             {itemCount > 0 && (
-              <span
+              <motion.span
+                aria-live="polite"
+                aria-atomic="true"
+                initial={false}
+                animate={badgeControls}
+                layout
                 className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full text-[10px] leading-4
                            bg-[color:var(--accent)] text-[#0e0e10] font-semibold text-center shadow"
               >
-                {itemCount > 99 ? "99+" : itemCount}
-              </span>
+                {/* ráfaga de halos escalonados */}
+                <AnimatePresence mode="popLayout">
+                  {[0, 1, 2].map((i) => (
+                    <motion.span
+                      key={`${itemCount}-burst-${i}`}
+                      className="absolute inset-0 rounded-full pointer-events-none ring-2 ring-[color:var(--accent)]"
+                      initial={{ scale: 0.7, opacity: 0.5 }}
+                      animate={{ scale: 2, opacity: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.55, delay: i * 0.06, ease: "easeOut" }}
+                    />
+                  ))}
+                </AnimatePresence>
+                {displayCount}
+              </motion.span>
             )}
           </Link>
 
-          {/* Hamburguesa (solo muestra/oculta links en móvil) */}
           <button
             className="md:hidden inline-flex items-center justify-center rounded-md p-2
                        hover:bg-black/5 active:bg-black/10 transition"
@@ -122,7 +219,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Menú móvil (solo enlaces, el carrito ya está siempre visible arriba) */}
+      {/* Menú móvil */}
       <div
         id="mobile-menu"
         className={[
