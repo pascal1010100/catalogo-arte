@@ -1,6 +1,9 @@
 // app/page.tsx
 import Link from "next/link";
 import Hero from "@/components/Hero";
+import CardSerie from "@/components/cards/CardSerie";
+import CardBio from "@/components/cards/CardBio";
+import CardContacto from "@/components/cards/CardContacto";
 
 export default function HomePage() {
   return (
@@ -28,39 +31,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Accesos rápidos / bloques sin imagen (evitamos 404) */}
+      {/* Accesos rápidos con imagen de fondo */}
       <section className="container-padded pb-16">
-        <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <li className="card p-5">
-            <h3 className="font-semibold">Series destacadas</h3>
-            <p className="mt-1 text-sm opacity-80">
-              Conoce las líneas de trabajo y colecciones recientes.
-            </p>
-            <Link href="/galeria" className="mt-3 inline-block underline underline-offset-4">
-              Explorar series
-            </Link>
-          </li>
-
-          <li className="card p-5">
-            <h3 className="font-semibold">Biografía & statement</h3>
-            <p className="mt-1 text-sm opacity-80">
-              Contexto, influencias y enfoque de la obra.
-            </p>
-            <Link href="/artista" className="mt-3 inline-block underline underline-offset-4">
-              Leer más
-            </Link>
-          </li>
-
-          <li className="card p-5">
-            <h3 className="font-semibold">Contacto & comisiones</h3>
-            <p className="mt-1 text-sm opacity-80">
-              Proyectos, colaboraciones y piezas a pedido.
-            </p>
-            <Link href="mailto:contacto@artista.com" className="mt-3 inline-block underline underline-offset-4">
-              Escribir
-            </Link>
-          </li>
-        </ul>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <CardSerie />
+          <CardBio />
+          <CardContacto />
+        </div>
       </section>
     </main>
   );

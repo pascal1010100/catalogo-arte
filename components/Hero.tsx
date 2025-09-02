@@ -58,13 +58,16 @@ export default function Hero({
     >
       {/* Fondo */}
       <Image
-        src={imageSrc}
-        alt=""
-        fill
-        priority
-        sizes="100vw"
-        className="object-cover object-center"
-      />
+  src={imageSrc}
+  alt=""
+  fill
+  priority
+  sizes="100vw"
+  quality={85}
+  className="pointer-events-none select-none object-cover"
+  style={{ objectPosition: "50% 35%" }} // ↑ mueve el foco (50% X, 35% Y)
+/>
+
 
       {/* Capa para legibilidad: unifica contraste en cualquier foto */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/65 via-black/40 to-black/55 md:from-black/45 md:via-black/25 md:to-black/40" />
