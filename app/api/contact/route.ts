@@ -1,9 +1,9 @@
 // app/api/contact/route.ts
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { Resend } from "resend";
 
-export const runtime = "edge";
-export const dynamic = "force-dynamic";
+export const runtime = "nodejs";        // ← usa Node en Vercel
+export const dynamic = "force-dynamic"; // no cachea
 
 type Payload = { name?: string; email?: string; message?: string };
 
@@ -16,11 +16,11 @@ const escapeHtml = (s: string) =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const { name = "", email = "", message = "" } = (await req.json()) as Payload;
 
-    // Validación simple
+    // Validación
     if (name.trim().length < 2 || name.trim().length > 80) {
       return NextResponse.json({ error: "El nombre debe tener al menos 2 caracteres." }, { status: 400 });
     }
@@ -31,18 +31,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "El mensaje es demasiado corto." }, { status: 400 });
     }
 
-    // ⚠️ No crear Resend a nivel de módulo. Valida env y crea aquí.
+    // ENV obligatorias
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
-        { error: "Server no configurado: falta RESEND_API_KEY." },
+        { error: "Server no configurado: falta RESEND_API_KEY en Vercel." },
         { status: 500 }
       );
     }
-    const resend = new Resend(apiKey);
 
     const from = process.env.MAIL_FROM || "ZPTVRD <onboarding@resend.dev>";
-    const to = process.env.MAIL_TO || email;
+    const to = process.env.MAIL_TO || email; // si no hay MAIL_TO, envía al remitente (no recomendado en prod)
+
+    // Crea el cliente aquí (no a nivel de módulo)
+    const resend = new Resend(apiKey);
 
     const subject = `Nuevo mensaje — ${name}`;
     const html = `
@@ -51,8 +53,7 @@ export async function POST(req: Request) {
         <p><strong>Nombre:</strong> ${escapeHtml(name)}</p>
         <p><strong>Email:</strong> ${escapeHtml(email)}</p>
         <p style="margin:12px 0 6px"><strong>Mensaje:</strong></p>
-        <pre style="white-space:pre-wrap;background:#f6f6f6;padding:12px;border-radius:8px">
-${escapeHtml(message)}</pre>
+        <pre style="white-space:pre-wrap;background:#f6f6f6;padding:12px;border-radius:8px">${escapeHtml(message)}</pre>
       </div>
     `;
 
@@ -66,12 +67,14 @@ ${escapeHtml(message)}</pre>
     });
 
     if (error) {
+      // Propaga el mensaje de Resend al cliente
       return NextResponse.json({ error: error.message || "No se pudo enviar." }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("[/api/contact] error:", err);
-    return NextResponse.json({ error: "Error inesperado." }, { status: 500 });
+    const msg =
+      err instanceof Error ? err.message : typeof err === "string" ? err : "Error inesperado.";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
