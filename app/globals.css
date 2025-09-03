@@ -1,37 +1,49 @@
 /* app/globals.css */
-
-/* Si usas Tailwind v3: */
-/* @tailwind base; */
-/* @tailwind components; */
-/* @tailwind utilities; */
-
-/* Si estás en Tailwind v4, tu import puede ser este: */
 @import "tailwindcss";
 
-/* ===== Design Tokens mínimos ===== */
+/* ========== Design Tokens (light / dark) ========== */
 :root {
-  --bg: #f3ede4;   /* fondo crema */
-  --fg: #0e0e10;   /* texto principal */
-  --accent: #9b8cf0; /* acento violeta pastel */
+  --bg: #f3ede4;          /* fondo crema (light) */
+  --fg: #0e0e10;          /* texto principal */
+  --accent: #9b8cf0;      /* acento violeta pastel */
   --radius: 16px;
+
+  --surface: #ffffff;     /* tarjetas / superficies claras */
+  --surface-2: #efe7df;   /* superficie secundaria */
 
   --shadow-soft: 0 6px 16px rgba(0,0,0,0.08);
   --shadow-lift: 0 12px 24px rgba(0,0,0,0.12);
 }
 
-/* ===== Base global ===== */
-html, body {
-  background: var(--bg);
-  color: var(--fg);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI",
-               Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji",
-               "Segoe UI Emoji";
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  min-height: 100%;
+/* Tema oscuro: cambia solo tokens */
+.dark {
+  --bg: #0f1115;          /* fondo oscuro */
+  --fg: #f2f3f6;          /* texto claro */
+  --accent: #b9a9ff;      /* acento en dark (ligeramente más claro) */
+
+  --surface: #161923;     /* tarjetas en dark */
+  --surface-2: #10131b;   /* superficie secundaria */
+
+  --shadow-soft: 0 6px 18px rgba(0,0,0,0.35);
+  --shadow-lift: 0 14px 34px rgba(0,0,0,0.45);
 }
 
-img, svg, video, canvas { display: block; max-width: 100%; }
+/* ========== Base global ========== */
+html, body {
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, "Noto Sans",
+    "Apple Color Emoji","Segoe UI Emoji";
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color .25s ease, color .25s ease;
+}
+
+::selection { background: color-mix(in oklab, var(--accent) 35%, transparent); color: var(--fg); }
+img, svg, video, canvas { display:block; max-width:100%; }
 
 :focus-visible {
   outline: 2px solid color-mix(in oklab, var(--accent) 65%, black);
@@ -39,7 +51,7 @@ img, svg, video, canvas { display: block; max-width: 100%; }
   border-radius: 8px;
 }
 
-/* ===== Contenedor y jerarquía mínima ===== */
+/* ========== Layout helpers ========== */
 .container-padded { max-width: 80rem; margin-inline:auto; padding-inline:1rem; }
 @media (min-width: 640px){ .container-padded{ padding-inline:1.25rem; } }
 @media (min-width: 1024px){ .container-padded{ padding-inline:1.5rem; } }
@@ -48,21 +60,33 @@ img, svg, video, canvas { display: block; max-width: 100%; }
 .h2 { font-size: clamp(1.4rem, 2.3vw, 1.75rem); line-height: 1.15; }
 .eyebrow { font-size:.72rem; letter-spacing:.22em; text-transform:uppercase; opacity:.7; }
 
-/* ===== Primitivas reutilizables mínimas ===== */
+/* ========== UI primitives ========== */
 .card {
-  background: #fff;
+  background: var(--surface);
   border-radius: var(--radius);
+  border: 1px solid color-mix(in oklab, var(--fg) 10%, transparent);
   box-shadow: var(--shadow-soft);
-  transition: transform .2s ease, box-shadow .2s ease;
+  transition: transform .2s ease, box-shadow .2s ease, background-color .2s ease, border-color .2s ease;
 }
 .card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
 
+/* Superficie usada en Contacto/aside */
+.card-surface {
+  background: var(--surface);
+  border: 1px solid color-mix(in oklab, var(--fg) 10%, transparent);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+}
+
+/* Botones */
 .btn {
   display:inline-flex; align-items:center; gap:.5rem;
   border-radius: 9999px;
   padding: .6rem 1rem;
-  font-size: .9rem;
+  font-size: .9rem; font-weight: 600;
+  transition: box-shadow .2s ease, background-color .2s ease, color .2s ease;
 }
+.btn:focus-visible { box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 35%, transparent); }
 
 .btn-accent {
   background: color-mix(in oklab, var(--accent) 88%, white);
@@ -70,3 +94,11 @@ img, svg, video, canvas { display: block; max-width: 100%; }
   box-shadow: inset 0 0 0 1px rgba(0,0,0,.06), var(--shadow-soft);
 }
 .btn-accent:hover { box-shadow: var(--shadow-lift); }
+
+/* Botón outlined morado (para “Sobre el Artista”) */
+.btn-outline-accent {
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  background: transparent;
+}
+.btn-outline-accent:hover { background: color-mix(in oklab, var(--accent) 12%, transparent); }

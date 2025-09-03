@@ -5,8 +5,8 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Nunito } from "next/font/google";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
-// Tipografía (coherente con tu globals.css que usa --font-nunito)
 const nunito = Nunito({
   subsets: ["latin"],
   variable: "--font-nunito",
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   },
   description:
     "Galería del artista: obras pictoplasma en paletas pastel — minimal y contemporáneo.",
-  metadataBase: new URL("https://example.com"), // cambia por tu dominio si tienes
+  metadataBase: new URL("https://example.com"),
   icons: { icon: "/favicon.ico" },
   openGraph: {
     title: "Catálogo Arte — ZPTVRD",
@@ -42,7 +42,11 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f3ede4", // tu --bg (fondo crema)
+  // Meta theme-color para ambos esquemas (afecta UI del navegador)
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f3ede4" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f1115" },
+  ],
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -50,25 +54,28 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <body className={`${nunito.variable} min-h-screen flex flex-col bg-[color:var(--bg)] text-[color:var(--fg)]`}>
         {/* Accesibilidad: saltar directo al contenido */}
         <a
           href="#contenido"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] bg-white px-3 py-2 rounded-md shadow"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] bg-white dark:bg-[color:var(--surface)] px-3 py-2 rounded-md shadow"
         >
           Saltar al contenido
         </a>
 
-        {/* Navbar fijo (altura h-14 ⇒ dejamos padding-top en el wrapper) */}
-        <Navbar />
+        {/* Proveedor de tema: aplica .dark en <html> mediante next-themes */}
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
+          {/* Navbar fijo (altura h-14 ⇒ dejamos padding-top en el wrapper) */}
+          <Navbar />
 
-        {/* Wrapper del contenido: deja espacio para el navbar */}
-        <div id="contenido" className="flex-1 pt-14">
-          {children}
-        </div>
+          {/* Wrapper del contenido: deja espacio para el navbar */}
+          <div id="contenido" className="flex-1 pt-14">
+            {children}
+          </div>
 
-        <Footer />
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
   );

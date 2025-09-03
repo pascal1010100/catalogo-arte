@@ -1,4 +1,3 @@
-// components/ui/Navbar.tsx
 "use client";
 
 import Link from "next/link";
@@ -13,6 +12,7 @@ import {
   useReducedMotion,
   AnimatePresence,
 } from "framer-motion";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 type NavLink = { href: string; label: string };
 
@@ -59,11 +59,6 @@ export default function Navbar() {
       return;
     }
 
-    // Secuencia vistosa (Framer v11 friendly):
-    // 1) Salto + bump (spring)
-    // 2) Wiggle rápido (tween)
-    // 3) Vuelve a lugar (spring)
-    // 4) Flash de brillo sutil (tween)
     (async () => {
       await badgeControls.start({
         scale: 1.25,
@@ -97,7 +92,6 @@ export default function Navbar() {
       });
     })();
 
-    // Mini “shake” del icono (tween con varios keyframes)
     iconControls.start({
       rotate: [0, -15, 12, -8, 0],
       transition: { duration: 0.5, ease: "easeOut" },
@@ -111,7 +105,7 @@ export default function Navbar() {
       className={[
         "fixed top-0 z-50 w-full border-b transition-all",
         scrolled ? "backdrop-blur-md" : "backdrop-blur-[2px]",
-        "bg-[color:var(--bg)]/92 border-black/10",
+        "bg-[color:var(--bg)]/92 border-black/10 dark:border-white/10",
       ].join(" ")}
     >
       <nav
@@ -163,18 +157,18 @@ export default function Navbar() {
           })}
         </div>
 
-        {/* Carrito + hamburguesa */}
+        {/* Tema + Carrito + Hamburguesa */}
         <div className="flex items-center gap-1 sm:gap-2">
+          {/* Sol/Luna */}
+          <ThemeToggle />
+
+          {/* Carrito */}
           <Link
             href="/carrito"
             aria-label={`Carrito${itemCount ? `: ${itemCount} artículo(s)` : ""}`}
-            className="relative inline-flex items-center justify-center rounded-full p-2 hover:bg-black/5 transition"
+            className="relative inline-flex items-center justify-center rounded-full p-2 hover:bg-black/5 dark:hover:bg-white/5 transition"
           >
-            <motion.span
-              className="inline-flex"
-              initial={false}
-              animate={iconControls}
-            >
+            <motion.span className="inline-flex" initial={false} animate={iconControls}>
               <ShoppingCart className="h-5 w-5 text-[color:var(--fg)]" />
             </motion.span>
 
@@ -188,7 +182,6 @@ export default function Navbar() {
                 className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full text-[10px] leading-4
                            bg-[color:var(--accent)] text-[#0e0e10] font-semibold text-center shadow"
               >
-                {/* ráfaga de halos escalonados */}
                 <AnimatePresence mode="popLayout">
                   {[0, 1, 2].map((i) => (
                     <motion.span
@@ -206,15 +199,20 @@ export default function Navbar() {
             )}
           </Link>
 
+          {/* Hamburguesa */}
           <button
             className="md:hidden inline-flex items-center justify-center rounded-md p-2
-                       hover:bg-black/5 active:bg-black/10 transition"
+                       hover:bg-black/5 dark:hover:bg-white/5 active:bg-black/10 transition"
             aria-label={open ? "Cerrar menú" : "Abrir menú"}
             aria-expanded={open}
             aria-controls="mobile-menu"
             onClick={() => setOpen((v) => !v)}
           >
-            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {open ? (
+              <X className="h-5 w-5 text-[color:var(--fg)]" />
+            ) : (
+              <Menu className="h-5 w-5 text-[color:var(--fg)]" />
+            )}
           </button>
         </div>
       </nav>
@@ -238,8 +236,8 @@ export default function Navbar() {
                 aria-current={active ? "page" : undefined}
                 className={[
                   "rounded-md px-3 py-2 text-sm",
-                  "hover:bg-black/5 active:bg-black/10 transition",
-                  active ? "font-semibold bg-black/5" : "text-[color:var(--fg)]/90",
+                  "hover:bg-black/5 dark:hover:bg-white/5 active:bg-black/10 transition",
+                  active ? "font-semibold bg-black/5 dark:bg-white/5" : "text-[color:var(--fg)]/90",
                 ].join(" ")}
               >
                 {l.label}
