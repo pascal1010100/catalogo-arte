@@ -55,7 +55,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className={`${nunito.variable} min-h-screen flex flex-col bg-[color:var(--bg)] text-[color:var(--fg)]`}>
+      <body className={`${nunito.variable} min-h-screen flex flex-col bg-background text-foreground`} suppressHydrationWarning>
         {/* Accesibilidad: saltar directo al contenido */}
         <a
           href="#contenido"

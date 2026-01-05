@@ -3,10 +3,13 @@
 import { Suspense, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams, ReadonlyURLSearchParams } from "next/navigation";
-import { GalleryVerticalEnd, SlidersHorizontal } from "lucide-react";
+import { GalleryVerticalEnd, SlidersHorizontal, ArrowDownAZ, ArrowUpAZ, Clock, Gem } from "lucide-react";
 import ArtworkCard from "@/components/ui/ArtworkCard";
-import ArtworkModal, { type ModalArtwork } from "@/components/galeria/ArtworkModal";
+import ArtworkModal, { type ModalArtwork } from "@/components/galeria/ArtworkModal"; // Assuming this exists or I'll leave it
 import { useCart } from "@/stores/cart";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { motion } from "framer-motion";
 
 /* ========= Tipos y datos ========= */
 type Obra = {
@@ -20,12 +23,12 @@ type Obra = {
 };
 
 const OBRAS: Obra[] = [
-  { id: "obra-1", title: "Luz en Silencio",   meta: "Óleo — 2024",    imageSrc: "/images/obra-1.jpg", chip: "Nueva",   price: 450 },
-  { id: "obra-2", title: "Memoria de Agua",   meta: "Acrílico — 2023", imageSrc: "/images/obra-2.jpg",                 price: 380 },
-  { id: "obra-3", title: "Campos Invisibles", meta: "Mixta — 2022",   imageSrc: "/images/obra-3.jpg", chip: "Serie X", price: 520 },
-  { id: "obra-4", title: "Solsticio",         meta: "Óleo — 2024",    imageSrc: "/images/obra-4.jpg",                 price: 410 },
-  { id: "obra-5", title: "Retícula",          meta: "Tinta — 2023",   imageSrc: "/images/obra-5.jpg",                 price: 260 },
-  { id: "obra-6", title: "Umbral",            meta: "Mixta — 2022",   imageSrc: "/images/obra-6.jpg",                 price: 300 },
+  { id: "obra-1", title: "Luz en Silencio", meta: "Óleo — 2024", imageSrc: "/images/obra-1.jpg", chip: "Nueva", price: 450 },
+  { id: "obra-2", title: "Memoria de Agua", meta: "Acrílico — 2023", imageSrc: "/images/obra-2.jpg", price: 380 },
+  { id: "obra-3", title: "Campos Invisibles", meta: "Mixta — 2022", imageSrc: "/images/obra-3.jpg", chip: "Serie X", price: 520 },
+  { id: "obra-4", title: "Solsticio", meta: "Óleo — 2024", imageSrc: "/images/obra-4.jpg", price: 410 },
+  { id: "obra-5", title: "Retícula", meta: "Tinta — 2023", imageSrc: "/images/obra-5.jpg", price: 260 },
+  { id: "obra-6", title: "Umbral", meta: "Mixta — 2022", imageSrc: "/images/obra-6.jpg", price: 300 },
 ];
 
 /* ========= Utils ========= */
@@ -65,17 +68,16 @@ function toModalArtwork(o?: Obra | null): ModalArtwork | null {
 /* ========= UI: Header ========= */
 function SectionHeader() {
   return (
-    <header className="mb-8">
-      <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] opacity-70">
-        <GalleryVerticalEnd className="size-4" />
-        Galería de obras
-      </span>
-      <h1 className="mt-3 text-4xl md:text-5xl font-semibold leading-tight">
-        Explora la colección
+    <header className="mb-12 text-center md:text-left">
+      <Badge variant="outline" className="mb-4">
+        <GalleryVerticalEnd className="mr-2 size-3" />
+        Colección 2024-2025
+      </Badge>
+      <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-4">
+        Galería de Obras
       </h1>
-      <p className="mt-3 text-sm opacity-70 max-w-2xl">
-        Selección curada de piezas recientes y series anteriores. Diseño claro,
-        legible y coherente con el resto de la app.
+      <p className="text-muted-foreground text-lg max-w-2xl text-balance">
+        Explora una selección curada de piezas únicas. Cada obra es un testimonio de la búsqueda entre lo orgánico y lo digital.
       </p>
     </header>
   );
@@ -83,8 +85,8 @@ function SectionHeader() {
 
 /* ========= UI: Toolbar (filtros + orden) ========= */
 type ToolbarProps = {
-  medio: string;  // "todas" | "oleo" | "acrilico" | "mixta" | "tinta"
-  orden: string;  // "recientes" | "precio-asc" | "precio-desc" | "anio-asc" | "anio-desc"
+  medio: string;
+  orden: string;
   pathname: string;
   searchParams: ReadonlyURLSearchParams;
 };
@@ -101,44 +103,41 @@ function Toolbar({ medio, orden, pathname, searchParams }: ToolbarProps) {
   ];
 
   const mkHref = (nextMedio: string, nextOrden: string) => {
-    const p = new URLSearchParams(searchParams.toString()); // copia mutable
+    const p = new URLSearchParams(searchParams.toString());
     p.set("medio", nextMedio);
     p.set("orden", nextOrden);
-    p.delete("obra"); // evita dejar modal abierto de una obra de otro filtro
+    p.delete("obra");
     const qs = p.toString();
     return qs ? `${pathname}?${qs}` : pathname;
   };
 
   return (
-    <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-      <ul className="flex flex-wrap gap-2">
+    <div className="mb-8 flex flex-col md:flex-row items-center justify-between gap-4 p-4 rounded-2xl border border-border bg-card/50 backdrop-blur-sm sticky top-20 z-10 shadow-sm">
+      <div className="flex flex-wrap justify-center gap-2">
         {filtros.map((f) => {
           const active = f.value === medio;
           return (
-            <li key={f.value}>
-              <Link
-                href={mkHref(f.value, orden)}
-                scroll={false}
-                className={[
-                  "inline-block rounded-full px-3 py-1.5 text-xs transition",
-                  active
-                    ? "border border-black/15 bg-black/[0.04]"
-                    : "border border-black/10 hover:border-black/15"
-                ].join(" ")}
+            <Link
+              key={f.value}
+              href={mkHref(f.value, orden)}
+              scroll={false}
+            >
+              <Button
+                variant={active ? "default" : "ghost"}
+                size="sm"
+                className="rounded-full h-8 px-4"
               >
                 {f.label}
-              </Link>
-            </li>
+              </Button>
+            </Link>
           );
         })}
-      </ul>
+      </div>
 
-      <div className="inline-flex items-center gap-2 rounded-full border border-black/10 px-2.5 py-1.5 text-xs">
-        <SlidersHorizontal className="size-4 opacity-70" />
-        <label htmlFor="orden" className="opacity-70">Ordenar</label>
+      <div className="flex items-center gap-3 pl-4 border-l border-border/50">
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ordenar</span>
         <select
-          id="orden"
-          className="bg-transparent outline-none"
+          className="bg-transparent text-sm font-medium outline-none cursor-pointer hover:text-primary transition-colors"
           value={orden}
           onChange={(e) => {
             const href = mkHref(medio, e.target.value);
@@ -146,10 +145,10 @@ function Toolbar({ medio, orden, pathname, searchParams }: ToolbarProps) {
           }}
         >
           <option value="recientes">Más recientes</option>
-          <option value="anio-desc">Año ↓</option>
-          <option value="anio-asc">Año ↑</option>
-          <option value="precio-desc">Precio ↓</option>
-          <option value="precio-asc">Precio ↑</option>
+          <option value="anio-desc">Por Año (Nuevo → Viejo)</option>
+          <option value="anio-asc">Por Año (Viejo → Nuevo)</option>
+          <option value="precio-desc">Precio (Mayor → Menor)</option>
+          <option value="precio-asc">Precio (Menor → Mayor)</option>
         </select>
       </div>
     </div>
@@ -159,7 +158,7 @@ function Toolbar({ medio, orden, pathname, searchParams }: ToolbarProps) {
 /* ========= Página (shell) ========= */
 export default function GaleriaPage() {
   return (
-    <Suspense fallback={<div className="container-padded py-12">Cargando…</div>}>
+    <Suspense fallback={<div className="container-padded py-20 text-center">Cargando galería...</div>}>
       <GaleriaInner />
     </Suspense>
   );
@@ -173,7 +172,7 @@ function GaleriaInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // params de URL (bien tipados)
+  // params de URL
   const slug = searchParams.get("obra") ?? undefined;
   const medioRaw = searchParams.get("medio") ?? "todas";
   const medio = normalize(medioRaw);
@@ -192,16 +191,12 @@ function GaleriaInner() {
       const ya = yearOf(a) ?? 0;
       const yb = yearOf(b) ?? 0;
       switch (orden) {
-        case "precio-asc":
-          return a.price - b.price;
-        case "precio-desc":
-          return b.price - a.price;
-        case "anio-asc":
-          return ya - yb;
+        case "precio-asc": return a.price - b.price;
+        case "precio-desc": return b.price - a.price;
+        case "anio-asc": return ya - yb;
         case "anio-desc":
         case "recientes":
-        default:
-          return yb - ya;
+        default: return yb - ya;
       }
     });
 
@@ -213,16 +208,14 @@ function GaleriaInner() {
   const modalArtwork = useMemo(() => toModalArtwork(selected), [selected]);
   const open = Boolean(slug);
 
-  // cerrar modal → eliminar ?obra, conservar medio/orden
   const setOpen = (next: boolean) => {
-    if (next) return; // abrir se hace con Link (?obra=...)
+    if (next) return;
     const p = new URLSearchParams(searchParams.toString());
     p.delete("obra");
     const qs = p.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   };
 
-  // href que preserva medio/orden y setea obra
   const addParamsToHref = (obraId: string) => {
     const p = new URLSearchParams(searchParams.toString());
     p.set("obra", obraId);
@@ -231,9 +224,10 @@ function GaleriaInner() {
   };
 
   return (
-    <main className="relative min-h-[70vh]">
-      <div className="max-w-6xl mx-auto px-6 py-12">
+    <main className="min-h-screen pb-20 pt-20">
+      <div className="container-padded md:max-w-7xl mx-auto">
         <SectionHeader />
+
         <Toolbar
           medio={medio}
           orden={orden}
@@ -242,37 +236,60 @@ function GaleriaInner() {
         />
 
         <section>
-          <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {obrasFiltradasOrdenadas.map((obra) => (
-              <li key={obra.id}>
-                <ArtworkCard
-                  title={obra.title}
-                  meta={obra.meta}
-                  imageSrc={obra.imageSrc}
-                  chip={obra.chip}
-                  href={addParamsToHref(obra.id)}   // preserva medio/orden en el deep-link
-                  className="card-surface card-hover"
-                  priceUsd={obra.price}
-                  addLabel="Agregar"
-                  onAdd={() =>
-                    add(
-                      {
-                        id: obra.id,
-                        name: obra.title,
-                        price: obra.price,
-                        imageUrl: obra.imageSrc,
-                      },
-                      1
-                    )
-                  }
-                />
-              </li>
-            ))}
-          </ul>
+          {obrasFiltradasOrdenadas.length === 0 ? (
+            <div className="py-20 text-center text-muted-foreground">
+              <p>No se encontraron obras con estos filtros.</p>
+              <Button
+                variant="link"
+                onClick={() => router.replace(pathname, { scroll: false })}
+              >
+                Limpiar filtros
+              </Button>
+            </div>
+          ) : (
+            <motion.ul
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ staggerChildren: 0.05 }}
+              className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            >
+              {obrasFiltradasOrdenadas.map((obra) => (
+                <motion.li
+                  key={obra.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                >
+                  <ArtworkCard
+                    title={obra.title}
+                    meta={obra.meta}
+                    imageSrc={obra.imageSrc}
+                    chip={obra.chip}
+                    href={addParamsToHref(obra.id)}
+                    priceUsd={obra.price}
+                    addLabel="Agregar"
+                    onAdd={() =>
+                      add(
+                        {
+                          id: obra.id,
+                          name: obra.title,
+                          price: obra.price,
+                          imageUrl: obra.imageSrc,
+                        },
+                        1
+                      )
+                    }
+                  />
+                </motion.li>
+              ))}
+            </motion.ul>
+          )}
         </section>
 
-        <div className="mt-10 text-center text-xs opacity-60">
-          Más series y colecciones se publicarán próximamente.
+        <div className="mt-20 text-center">
+          <p className="text-sm text-muted-foreground/60">
+            © 2025 Catálogo de Arte. Todas las obras son propiedad del artista.
+          </p>
         </div>
       </div>
 

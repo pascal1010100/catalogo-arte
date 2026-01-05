@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import clsx from "clsx";
 
 type ArtworkCardProps = {
@@ -31,8 +32,8 @@ export default function ArtworkCard({
   return (
     <div
       className={clsx(
-        "group rounded-2xl overflow-hidden border border-black/10 bg-white shadow-[var(--shadow-soft)]",
-        "transition hover:shadow-[var(--shadow-lift)]",
+        "group rounded-2xl overflow-hidden border border-border bg-card shadow-sm",
+        "transition-all duration-300 hover:shadow-md hover:border-border/80",
         className
       )}
     >
@@ -40,18 +41,18 @@ export default function ArtworkCard({
       <Link
         href={href}
         scroll={false}
-        className="block focus:outline-none focus:ring-2 focus:ring-black/10"
+        className="block focus:outline-none focus:ring-2 focus:ring-ring"
       >
-        <div className="relative aspect-[4/3]">
+        <div className="relative aspect-[4/3] overflow-hidden">
           <Image
             src={imageSrc}
             alt={title}
             fill
-            className="object-cover transition group-hover:scale-[1.02]"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
             sizes="(max-width:768px) 100vw, 33vw"
           />
           {chip && (
-            <span className="absolute left-3 top-3 rounded-full border border-black/10 bg-white/85 px-2.5 py-1 text-[10px] uppercase tracking-wide text-[color:var(--fg)]/80 backdrop-blur">
+            <span className="absolute left-3 top-3 rounded-full border border-border/50 bg-background/80 px-2.5 py-1 text-[10px] uppercase tracking-wide text-foreground backdrop-blur-md">
               {chip}
             </span>
           )}
@@ -61,31 +62,31 @@ export default function ArtworkCard({
       {/* Footer de la tarjeta */}
       <div className="p-4 flex items-center justify-between gap-3">
         <div>
-          <p className="font-semibold">{title}</p>
-          {meta && <p className="mt-0.5 text-sm opacity-70">{meta}</p>}
+          <p className="font-semibold text-foreground">{title}</p>
+          {meta && <p className="mt-0.5 text-sm text-muted-foreground">{meta}</p>}
         </div>
 
         <div className="flex items-center gap-2">
           {/* Botón agregar al carrito */}
           {onAdd && (
-            <button
-              type="button"
+            <Button
+              size="sm"
               onClick={onAdd}
-              className="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold btn-accent"
+              className="rounded-full px-4 h-8 text-xs"
               aria-label={`Agregar ${title}${priceUsd ? ` por $${priceUsd}` : ""}`}
             >
               {addLabel}
-            </button>
+            </Button>
           )}
 
           {/* Botón Ver más → abre modal */}
           <Link
             href={href}
             scroll={false}
-            className="shrink-0 rounded-full px-3 py-1.5 text-xs font-medium border border-black/10 hover:border-black/20 transition"
-            aria-label={`Ver más sobre ${title}`}
           >
-            Ver más
+            <Button variant="outline" size="sm" className="rounded-full px-4 h-8 text-xs">
+              Ver más
+            </Button>
           </Link>
         </div>
       </div>

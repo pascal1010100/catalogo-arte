@@ -6,14 +6,14 @@ type Pastel = "peach" | "mint" | "lavender" | "lemon" | "sky" | "lilac"
 type Variant = "surface" | "frame" | "outline"
 
 const surface = (color: Pastel) =>
-  ({
-    peach: "pastel-surface-peach",
-    mint: "pastel-surface-mint",
-    lavender: "pastel-surface-lavender",
-    lemon: "pastel-surface-lemon",
-    sky: "pastel-surface-sky",
-    lilac: "pastel-surface-lilac",
-  }[color])
+({
+  peach: "pastel-surface-peach",
+  mint: "pastel-surface-mint",
+  lavender: "pastel-surface-lavender",
+  lemon: "pastel-surface-lemon",
+  sky: "pastel-surface-sky",
+  lilac: "pastel-surface-lilac",
+}[color])
 
 type CardProps = React.HTMLAttributes<HTMLDivElement> & {
   color?: Pastel
@@ -38,8 +38,8 @@ export function Card({
     imageAspect === "square"
       ? "aspect-square"
       : imageAspect === "16/10"
-      ? "aspect-[16/10]"
-      : "aspect-[4/3]"
+        ? "aspect-[16/10]"
+        : "aspect-[4/3]"
 
   if (variant === "frame") {
     // Marco degradado con superficie interna crema (sin fondo pastel sólido)
@@ -115,5 +115,5 @@ export function CardTitle(props: React.HTMLAttributes<HTMLHeadingElement>) {
 }
 
 export function CardText(props: React.HTMLAttributes<HTMLParagraphElement>) {
-  return <p className="mt-2 text-sm md:text-base text-[color:var(--muted)]" {...props} />
+  return <p className="mt-2 text-sm md:text-base text-muted-foreground" {...props} />
 }
